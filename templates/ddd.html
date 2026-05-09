@@ -1,0 +1,687 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lickelurl | Modern URL Shortener & QR Generator</title>
+    
+    <!-- Fonts: Plus Jakarta Sans for a premium modern feel -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Icons: Phosphor Icons -->
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+                    },
+                    animation: {
+                        'blob': 'blob 10s infinite',
+                        'fade-in-up': 'fadeInUp 0.8s ease-out forwards',
+                    },
+                    keyframes: {
+                        blob: {
+                            '0%': { transform: 'translate(0px, 0px) scale(1)' },
+                            '33%': { transform: 'translate(30px, -50px) scale(1.1)' },
+                            '66%': { transform: 'translate(-20px, 20px) scale(0.9)' },
+                            '100%': { transform: 'translate(0px, 0px) scale(1)' },
+                        },
+                        fadeInUp: {
+                            '0%': { opacity: '0', transform: 'translateY(20px)' },
+                            '100%': { opacity: '1', transform: 'translateY(0)' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            background-color: #050505;
+            color: #ffffff;
+            overflow-x: hidden;
+        }
+
+        /* Glassmorphism Utilities */
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        .glass-card {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.01) 100%);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-top: 1px solid rgba(255, 255, 255, 0.2);
+            border-left: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+        }
+
+        .glass-input {
+            background: rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: white;
+            transition: all 0.3s ease;
+        }
+
+        .glass-input:focus {
+            outline: none;
+            border-color: rgba(168, 85, 247, 0.5); /* Purple-500 equivalent */
+            background: rgba(0, 0, 0, 0.4);
+            box-shadow: 0 0 15px rgba(168, 85, 247, 0.2);
+        }
+
+        .glass-button {
+            background: linear-gradient(135deg, rgba(168, 85, 247, 0.8) 0%, rgba(59, 130, 246, 0.8) 100%);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: all 0.3s ease;
+        }
+
+        .glass-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(168, 85, 247, 0.4);
+            background: linear-gradient(135deg, rgba(168, 85, 247, 0.9) 0%, rgba(59, 130, 246, 0.9) 100%);
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #050505; 
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.2); 
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.4); 
+        }
+
+        /* Text Gradient */
+        .text-gradient {
+            background: linear-gradient(to right, #a855f7, #3b82f6, #06b6d4);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        /* Loader */
+        .loader {
+            border: 3px solid rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            border-top: 3px solid #a855f7;
+            width: 24px;
+            height: 24px;
+            -webkit-animation: spin 1s linear infinite; /* Safari */
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body class="antialiased relative min-h-screen flex flex-col">
+
+    <!-- Background Animated Blobs -->
+    <div class="fixed inset-0 w-full h-full overflow-hidden -z-10 pointer-events-none">
+        <div class="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full bg-purple-600/30 blur-[120px] mix-blend-screen animate-blob"></div>
+        <div class="absolute top-[20%] right-[-10%] w-[35%] h-[35%] rounded-full bg-blue-600/20 blur-[120px] mix-blend-screen animate-blob" style="animation-delay: 2s;"></div>
+        <div class="absolute bottom-[-20%] left-[20%] w-[50%] h-[50%] rounded-full bg-cyan-600/20 blur-[150px] mix-blend-screen animate-blob" style="animation-delay: 4s;"></div>
+    </div>
+
+    <!-- Navigation -->
+    <nav class="fixed w-full z-50 top-0 pt-6 px-4 sm:px-6 lg:px-8 transition-all duration-300" id="navbar">
+        <div class="max-w-7xl mx-auto">
+            <div class="glass-panel rounded-full px-6 py-4 flex items-center justify-between">
+                <!-- Logo -->
+                <div class="flex items-center gap-2 cursor-pointer">
+                    <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-purple-500 to-blue-500 flex items-center justify-center shadow-lg">
+                        <i class="ph-bold ph-link text-white text-xl"></i>
+                    </div>
+                    <span class="text-xl font-bold tracking-tight">Lickel<span class="text-purple-400">url</span></span>
+                </div>
+
+                <!-- Desktop Menu -->
+                <div class="hidden md:flex items-center space-x-8 text-sm font-medium text-gray-300">
+                    <a href="#features" class="hover:text-white transition-colors">Features</a>
+                    <a href="#api" class="hover:text-white transition-colors">API</a>
+                    <a href="#pricing" class="hover:text-white transition-colors">Pricing</a>
+                </div>
+
+                <!-- Auth Buttons -->
+                <div class="hidden md:flex items-center space-x-4">
+                    <a href="#" class="text-sm font-medium text-gray-300 hover:text-white transition-colors">Log in</a>
+                    <a href="#" class="glass-button px-5 py-2 rounded-full text-sm font-semibold text-white">Sign Up</a>
+                </div>
+
+                <!-- Mobile Menu Button -->
+                <button class="md:hidden text-gray-300 hover:text-white focus:outline-none">
+                    <i class="ph ph-list text-2xl"></i>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="flex-grow flex flex-col justify-center pt-32 pb-16 px-4 sm:px-6 lg:px-8 relative z-10">
+        
+        <!-- Hero Section -->
+        <div class="text-center max-w-4xl mx-auto mb-16 animate-fade-in-up">
+            <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full glass-panel text-sm font-medium text-purple-300 mb-6 border-purple-500/30">
+                <span class="relative flex h-2 w-2">
+                  <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-purple-400 opacity-75"></span>
+                  <span class="relative inline-flex rounded-full h-2 w-2 bg-purple-500"></span>
+                </span>
+                Lickelurl 2.0 is now live
+            </div>
+            <h1 class="text-5xl md:text-7xl font-extrabold tracking-tight mb-6 leading-tight">
+                Make Every Link <br class="hidden md:block"/>
+                <span class="text-gradient">Work Harder.</span>
+            </h1>
+            <p class="text-lg md:text-xl text-gray-400 max-w-2xl mx-auto">
+                The ultimate glossy platform to shorten URLs, generate custom QR codes, and track audience engagement in real-time.
+            </p>
+        </div>
+
+        <!-- Interactive Tool Card -->
+        <div class="max-w-3xl mx-auto w-full animate-fade-in-up" style="animation-delay: 0.2s;">
+            <div class="glass-card rounded-3xl p-6 sm:p-10 relative overflow-hidden">
+                <!-- Decorative reflection highlight -->
+                <div class="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-white/40 to-transparent"></div>
+
+                <!-- Tabs -->
+                <div class="flex p-1 space-x-1 glass-panel rounded-xl mb-8 w-max mx-auto border-white/5">
+                    <button id="tab-shorten" class="relative w-32 py-2.5 text-sm font-medium rounded-lg text-white shadow bg-white/10 transition-all duration-200 focus:outline-none" onclick="switchTab('shorten')">
+                        <div class="flex items-center justify-center gap-2">
+                            <i class="ph ph-link-break"></i> Shorten
+                        </div>
+                    </button>
+                    <button id="tab-qr" class="relative w-32 py-2.5 text-sm font-medium rounded-lg text-gray-400 hover:text-white transition-all duration-200 focus:outline-none" onclick="switchTab('qr')">
+                        <div class="flex items-center justify-center gap-2">
+                            <i class="ph ph-qr-code"></i> QR Code
+                        </div>
+                    </button>
+                </div>
+
+                <!-- URL Input Area -->
+                <div class="relative group">
+                    <div class="absolute -inset-1 bg-gradient-to-r from-purple-600 to-blue-600 rounded-2xl blur opacity-25 group-hover:opacity-40 transition duration-1000 group-hover:duration-200"></div>
+                    <form id="action-form" method="POST" class="relative flex flex-col sm:flex-row gap-4 bg-[#0a0a0a] rounded-2xl p-2 border border-white/10" onsubmit="handleFormSubmit(event)">
+                    {% csrf_token %}
+                        <div class="relative flex-grow flex items-center pl-4">
+                            <i class="ph ph-link text-gray-400 text-xl absolute"></i>
+                            <input type="url" name="long_url" id="url-input" required placeholder="Paste your long URL here..." 
+                                class="w-full bg-transparent border-none text-white placeholder-gray-500 focus:ring-0 pl-8 pr-4 py-3 text-lg outline-none" autocomplete="off">
+                        </div>
+                        <button type="submit" id="submit-btn" class="glass-button px-8 py-3 rounded-xl font-semibold text-white flex items-center justify-center gap-2 min-w-[160px]">
+                            <span id="btn-text">Shorten Now</span>
+                            <i class="ph-bold ph-arrow-right transition-transform group-hover:translate-x-1" id="btn-icon"></i>
+                            <div id="btn-loader" class="loader hidden"></div>
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Result Area (Hidden by default) -->
+                <div id="result-area" class="mt-8 hidden opacity-0 transition-opacity duration-500">
+                    
+                    <!-- Short Link Result -->
+                    <div id="result-shortlink" class="hidden">
+                        <p class="text-sm text-gray-400 mb-2 font-medium">Your shortened link is ready:</p>
+                        <div class="glass-panel p-4 rounded-xl flex items-center justify-between border-green-500/30 bg-green-500/5">
+                            <div class="flex items-center gap-3 overflow-hidden">
+                                <div class="w-10 h-10 rounded-full bg-green-500/20 flex items-center justify-center text-green-400 shrink-0">
+                                    <i class="ph-bold ph-check text-xl"></i>
+                                </div>
+                                <a href="#" id="generated-url" class="text-lg font-semibold text-white hover:text-purple-400 transition-colors truncate" target="_blank">lickel.url/xyz123</a>
+                            </div>
+                            <button onclick="copyToClipboard('generated-url')" class="glass-panel p-2.5 rounded-lg hover:bg-white/10 transition-colors text-gray-300 hover:text-white focus:outline-none" title="Copy to clipboard">
+                                <i class="ph ph-copy text-xl"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- QR Code Result -->
+                    <div id="result-qr" class="hidden flex flex-col items-center">
+                        <p class="text-sm text-gray-400 mb-4 font-medium">Scan or download your QR Code:</p>
+                        <div class="glass-panel p-6 rounded-2xl border-purple-500/30 bg-white/5 inline-block relative group">
+                            <!-- Skeleton loader for image -->
+                            <div id="qr-skeleton" class="absolute inset-0 m-6 bg-white/10 animate-pulse rounded-xl hidden"></div>
+                            
+                            <img id="generated-qr" src="" alt="Generated QR Code" class="w-48 h-48 rounded-xl shadow-2xl transition-opacity duration-300" onload="document.getElementById('qr-skeleton').classList.add('hidden')">
+                            
+                            <div class="absolute inset-0 bg-black/60 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center backdrop-blur-sm">
+                                <button onclick="downloadQR()" class="glass-button px-4 py-2 rounded-lg text-sm font-semibold flex items-center gap-2">
+                                    <i class="ph-bold ph-download-simple"></i> Download
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- HOW IT WORKS Section -->
+        <section class="max-w-7xl mx-auto w-full mt-32 px-4" id="how">
+            <div class="text-center mb-16">
+                <div class="inline-block px-4 py-1.5 rounded-full glass-panel text-sm font-semibold text-cyan-400 mb-4 border-cyan-500/30 uppercase tracking-widest shadow-[0_0_15px_rgba(6,182,212,0.2)]">
+                    How it works
+                </div>
+                <h2 class="text-3xl md:text-5xl font-bold mb-4">From long to short in <span class="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-500">3 seconds.</span></h2>
+                <p class="text-gray-400 max-w-2xl mx-auto">A seamless workflow designed to get your links ready for the world instantly.</p>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <!-- Step 1 -->
+                <div class="glass-card p-8 rounded-3xl relative overflow-hidden group hover:-translate-y-2 transition-transform duration-300">
+                    <div class="text-[120px] font-extrabold text-white/5 absolute -right-4 -bottom-10 group-hover:text-white/10 transition-colors duration-500 leading-none pointer-events-none">01</div>
+                    <div class="w-12 h-12 rounded-xl bg-white/5 flex items-center justify-center text-white mb-6 border border-white/10 group-hover:border-cyan-500/50 transition-colors">
+                        <i class="ph ph-clipboard-text text-2xl"></i>
+                    </div>
+                    <div class="text-xl font-bold text-white mb-3 relative z-10">Paste your URL</div>
+                    <div class="text-gray-400 text-sm leading-relaxed relative z-10">Drop any long URL into the input — even with tracking parameters and complex query strings.</div>
+                </div>
+
+                <!-- Step 2 -->
+                <div class="glass-card p-8 rounded-3xl relative overflow-hidden group hover:-translate-y-2 transition-transform duration-300">
+                    <div class="text-[120px] font-extrabold text-white/5 absolute -right-4 -bottom-10 group-hover:text-white/10 transition-colors duration-500 leading-none pointer-events-none">02</div>
+                    <div class="w-12 h-12 rounded-xl bg-white/5 flex items-center justify-center text-white mb-6 border border-white/10 group-hover:border-blue-500/50 transition-colors">
+                        <i class="ph ph-sliders text-2xl"></i>
+                    </div>
+                    <div class="text-xl font-bold text-white mb-3 relative z-10">Customize <span class="text-xs font-normal text-gray-500 ml-1">(optional)</span></div>
+                    <div class="text-gray-400 text-sm leading-relaxed relative z-10">Give your link a custom alias, set an expiration date, or add password protection for security.</div>
+                </div>
+
+                <!-- Step 3 -->
+                <div class="glass-card p-8 rounded-3xl relative overflow-hidden group hover:-translate-y-2 transition-transform duration-300">
+                    <div class="text-[120px] font-extrabold text-white/5 absolute -right-4 -bottom-10 group-hover:text-white/10 transition-colors duration-500 leading-none pointer-events-none">03</div>
+                    <div class="w-12 h-12 rounded-xl bg-white/5 flex items-center justify-center text-white mb-6 border border-white/10 group-hover:border-purple-500/50 transition-colors">
+                        <i class="ph ph-share-network text-2xl"></i>
+                    </div>
+                    <div class="text-xl font-bold text-white mb-3 relative z-10">Share your link</div>
+                    <div class="text-gray-400 text-sm leading-relaxed relative z-10">Copy your fresh short link or download the auto-generated high-res QR code instantly.</div>
+                </div>
+
+                <!-- Step 4 -->
+                <div class="glass-card p-8 rounded-3xl relative overflow-hidden group hover:-translate-y-2 transition-transform duration-300">
+                    <div class="text-[120px] font-extrabold text-white/5 absolute -right-4 -bottom-10 group-hover:text-white/10 transition-colors duration-500 leading-none pointer-events-none">04</div>
+                    <div class="w-12 h-12 rounded-xl bg-white/5 flex items-center justify-center text-white mb-6 border border-white/10 group-hover:border-pink-500/50 transition-colors">
+                        <i class="ph ph-chart-polar text-2xl"></i>
+                    </div>
+                    <div class="text-xl font-bold text-white mb-3 relative z-10">Track performance</div>
+                    <div class="text-gray-400 text-sm leading-relaxed relative z-10">Watch real-time analytics pour in as your audience clicks, scans, and interacts worldwide.</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Features Bento Box -->
+        <section id="features" class="max-w-7xl mx-auto w-full mt-32 px-4">
+            <div class="text-center mb-12">
+                <div class="inline-block px-4 py-1.5 rounded-full glass-panel text-sm font-semibold text-purple-400 mb-4 border-purple-500/30 uppercase tracking-widest shadow-[0_0_15px_rgba(168,85,247,0.2)]">
+                    Features
+                </div>
+                <h2 class="text-3xl md:text-4xl font-bold mb-4">More than just a link shortener</h2>
+                <p class="text-gray-400">Everything you need to manage links and QR codes in one place.</p>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <!-- Feature 1: Analytics (Spans 2 columns) -->
+                <div class="glass-card p-8 md:p-10 rounded-3xl md:col-span-2 group relative overflow-hidden flex flex-col justify-center min-h-[300px]">
+                    <div class="relative z-10 md:w-2/3">
+                        <div class="w-14 h-14 rounded-2xl bg-purple-500/20 flex items-center justify-center text-purple-400 mb-6 border border-purple-500/30 shadow-lg shadow-purple-500/10">
+                            <i class="ph ph-chart-line-up text-3xl"></i>
+                        </div>
+                        <h3 class="text-2xl font-bold mb-3 text-white">Powerful Analytics</h3>
+                        <p class="text-gray-400 text-sm md:text-base leading-relaxed">Track clicks, geographic data, and referrers in real-time. Make data-driven decisions with our beautiful, interactive dashboard.</p>
+                    </div>
+                    
+                    <!-- Decorative Chart Background -->
+                    <div class="absolute -right-10 -bottom-10 md:right-8 md:bottom-8 flex items-end gap-3 opacity-30 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none">
+                        <div class="w-8 md:w-12 bg-gradient-to-t from-transparent to-purple-600/50 rounded-t-lg h-24 border-t border-x border-purple-500/30"></div>
+                        <div class="w-8 md:w-12 bg-gradient-to-t from-transparent to-blue-600/50 rounded-t-lg h-40 border-t border-x border-blue-500/30"></div>
+                        <div class="w-8 md:w-12 bg-gradient-to-t from-transparent to-cyan-600/50 rounded-t-lg h-32 border-t border-x border-cyan-500/30"></div>
+                        <div class="w-8 md:w-12 bg-gradient-to-t from-transparent to-purple-400/50 rounded-t-lg h-48 border-t border-x border-purple-400/30 relative">
+                            <div class="absolute -top-2 -left-2 w-4 h-4 bg-white rounded-full shadow-[0_0_15px_rgba(255,255,255,0.8)]"></div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Feature 2: Custom Brands (Spans 1 column) -->
+                <div class="glass-card p-8 md:p-10 rounded-3xl md:col-span-1 group relative overflow-hidden flex flex-col min-h-[300px]">
+                    <div class="w-14 h-14 rounded-2xl bg-blue-500/20 flex items-center justify-center text-blue-400 mb-6 border border-blue-500/30 shadow-lg shadow-blue-500/10 relative z-10">
+                        <i class="ph ph-palette text-3xl"></i>
+                    </div>
+                    <h3 class="text-2xl font-bold mb-3 text-white relative z-10">Custom Branded Links</h3>
+                    <p class="text-gray-400 text-sm leading-relaxed relative z-10 flex-grow">Ditch the generic hashes. Create custom aliases to boost brand trust and click-through rates.</p>
+                    
+                    <!-- Decorative UI Element -->
+                    <div class="mt-6 glass-panel p-3 rounded-xl border-dashed border-white/20 text-center relative z-10 group-hover:border-blue-500/50 transition-colors bg-black/40">
+                        <span class="text-gray-500">lickel.url/</span><span class="text-blue-400 font-bold">summer-sale</span>
+                    </div>
+                    
+                    <!-- Background Glow -->
+                    <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-32 h-32 bg-blue-500/20 blur-[50px] rounded-full pointer-events-none group-hover:bg-blue-500/30 transition-colors"></div>
+                </div>
+
+                <!-- Feature 3: Dynamic QR (Spans full width) -->
+                <div class="glass-card p-8 md:p-10 rounded-3xl md:col-span-3 group relative overflow-hidden flex flex-col md:flex-row items-center justify-between gap-8">
+                    <div class="md:w-1/2 relative z-10">
+                        <div class="w-14 h-14 rounded-2xl bg-cyan-500/20 flex items-center justify-center text-cyan-400 mb-6 border border-cyan-500/30 shadow-lg shadow-cyan-500/10">
+                            <i class="ph ph-qr-code text-3xl"></i>
+                        </div>
+                        <h3 class="text-2xl font-bold mb-3 text-white">Dynamic QR Codes</h3>
+                        <p class="text-gray-400 text-sm md:text-base leading-relaxed">Generate sleek, scannable QR codes instantly. The best part? You can update the destination URL anytime in the future without having to reprint or redistribute your existing codes.</p>
+                    </div>
+                    
+                    <!-- Decorative QR Element -->
+                    <div class="md:w-1/2 flex justify-center md:justify-end relative z-10 w-full">
+                        <div class="w-48 h-48 glass-panel rounded-2xl border-white/10 flex items-center justify-center shadow-2xl relative transform rotate-3 group-hover:rotate-0 transition-transform duration-500 bg-white/5 backdrop-blur-xl">
+                            <!-- Scanning line animation -->
+                            <div class="absolute top-0 left-0 w-full h-[2px] bg-cyan-400 shadow-[0_0_15px_rgba(6,182,212,1)] opacity-0 group-hover:opacity-100 animate-[scan_2s_ease-in-out_infinite]"></div>
+                            <style>
+                                @keyframes scan {
+                                    0% { top: 10%; opacity: 0; }
+                                    10% { opacity: 1; }
+                                    90% { opacity: 1; }
+                                    100% { top: 90%; opacity: 0; }
+                                }
+                            </style>
+                            <i class="ph-bold ph-qr-code text-[100px] text-white/30 group-hover:text-cyan-400/50 transition-colors duration-500"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="relative z-10 border-t border-white/10 bg-black/50 backdrop-blur-md mt-auto">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex flex-col md:flex-row items-center justify-between">
+            <div class="flex items-center gap-2 mb-4 md:mb-0 opacity-80 hover:opacity-100 transition-opacity cursor-pointer">
+                <i class="ph-fill ph-link text-purple-500 text-xl"></i>
+                <span class="text-lg font-bold tracking-tight text-white">Lickel<span class="text-gray-400">url</span></span>
+            </div>
+            <div class="flex space-x-6 text-sm text-gray-500">
+                <a href="#" class="hover:text-white transition-colors">Privacy Policy</a>
+                <a href="#" class="hover:text-white transition-colors">Terms of Service</a>
+                <a href="#" class="hover:text-white transition-colors">Contact Support</a>
+            </div>
+            <div class="text-sm text-gray-600 mt-4 md:mt-0">
+                &copy; 2026 Lickelurl Inc. All rights reserved.
+            </div>
+        </div>
+    </footer>
+
+    <!-- Toast Notification Box -->
+    <div id="toast" class="fixed bottom-5 right-5 glass-card px-6 py-4 rounded-xl flex items-center gap-3 transform translate-y-20 opacity-0 transition-all duration-300 z-50 pointer-events-none">
+        <div class="w-8 h-8 rounded-full bg-green-500/20 flex items-center justify-center text-green-400 shrink-0">
+            <i class="ph-bold ph-check"></i>
+        </div>
+        <span id="toast-message" class="text-sm font-medium text-white">Copied to clipboard!</span>
+    </div>
+
+    <script>
+        // State management
+        let currentMode = 'shorten'; // 'shorten' or 'qr'
+        
+        // DOM Elements
+        const form = document.getElementById('action-form');
+        const urlInput = document.getElementById('url-input');
+        const btnText = document.getElementById('btn-text');
+        const btnIcon = document.getElementById('btn-icon');
+        const btnLoader = document.getElementById('btn-loader');
+        const submitBtn = document.getElementById('submit-btn');
+        
+        const resultArea = document.getElementById('result-area');
+        const resultShortlink = document.getElementById('result-shortlink');
+        const resultQr = document.getElementById('result-qr');
+        const generatedUrlSpan = document.getElementById('generated-url');
+        const generatedQrImg = document.getElementById('generated-qr');
+        const qrSkeleton = document.getElementById('qr-skeleton');
+        
+        const tabShorten = document.getElementById('tab-shorten');
+        const tabQr = document.getElementById('tab-qr');
+        const toast = document.getElementById('toast');
+        const toastMessage = document.getElementById('toast-message');
+
+        // Handle Tab Switching
+        function switchTab(mode) {
+            currentMode = mode;
+            
+            // Reset results
+            hideResults();
+            urlInput.value = '';
+
+            if (mode === 'shorten') {
+                // Style Active Tab
+                tabShorten.classList.add('text-white', 'shadow', 'bg-white/10');
+                tabShorten.classList.remove('text-gray-400');
+                // Style Inactive Tab
+                tabQr.classList.remove('text-white', 'shadow', 'bg-white/10');
+                tabQr.classList.add('text-gray-400');
+                
+                // Update Button UI
+                btnText.innerText = 'Shorten Now';
+                btnIcon.className = 'ph-bold ph-arrow-right transition-transform group-hover:translate-x-1';
+                urlInput.placeholder = 'Paste your long URL here...';
+            } else {
+                // Style Active Tab
+                tabQr.classList.add('text-white', 'shadow', 'bg-white/10');
+                tabQr.classList.remove('text-gray-400');
+                // Style Inactive Tab
+                tabShorten.classList.remove('text-white', 'shadow', 'bg-white/10');
+                tabShorten.classList.add('text-gray-400');
+                
+                // Update Button UI
+                btnText.innerText = 'Generate QR';
+                btnIcon.className = 'ph-bold ph-magic-wand transition-transform group-hover:scale-110';
+                urlInput.placeholder = 'Enter URL to convert to QR code...';
+            }
+        }
+
+        // Handle Form Submission (Mock API Call)
+        function handleFormSubmit(e) {
+            e.preventDefault();
+            const url = urlInput.value.trim();
+            if (!url) return;
+
+            // Basic validation to ensure it looks like a URL
+            if (!url.startsWith('http://') && !url.startsWith('https://')) {
+                urlInput.value = 'https://' + url;
+            }
+
+            setLoadingState(true);
+            hideResults();
+
+            // Simulate Network Request Delay to give a "real experience" feel
+            setTimeout(() => {
+                if (currentMode === 'shorten') {
+                    generateShortLink(urlInput.value);
+                } else {
+                    generateQRCode(urlInput.value);
+                }
+                setLoadingState(false);
+            }, 1200);
+        }
+
+        function setLoadingState(isLoading) {
+            submitBtn.disabled = isLoading;
+            if (isLoading) {
+                btnText.classList.add('hidden');
+                btnIcon.classList.add('hidden');
+                btnLoader.classList.remove('hidden');
+                submitBtn.classList.add('opacity-80', 'cursor-not-allowed');
+            } else {
+                btnText.classList.remove('hidden');
+                btnIcon.classList.remove('hidden');
+                btnLoader.classList.add('hidden');
+                submitBtn.classList.remove('opacity-80', 'cursor-not-allowed');
+            }
+        }
+
+        function hideResults() {
+            resultArea.classList.add('hidden');
+            resultArea.classList.remove('opacity-100');
+            resultShortlink.classList.add('hidden');
+            resultQr.classList.add('hidden');
+        }
+
+        function showResults(mode) {
+            resultArea.classList.remove('hidden');
+            // Trigger reflow for transition
+            void resultArea.offsetWidth;
+            resultArea.classList.add('opacity-100');
+            
+            if (mode === 'shorten') {
+                resultShortlink.classList.remove('hidden');
+            } else {
+                resultQr.classList.remove('hidden', 'flex'); // Tailwind 'hidden' removal
+                resultQr.classList.add('flex');
+            }
+        }
+
+        // Mock Short Link Generator
+        function generateShortLink(originalUrl) {
+            // Generate a random 6 character alphanumeric string
+            const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+            let hash = '';
+            for (let i = 0; i < 6; i++) {
+                hash += chars.charAt(Math.floor(Math.random() * chars.length));
+            }
+            
+            const shortUrl = `lickel.url/${hash}`;
+            generatedUrlSpan.innerText = shortUrl;
+            generatedUrlSpan.href = `https://${shortUrl}`; // Mock href
+            
+            showResults('shorten');
+        }
+
+        // Real QR Code Generation using qrserver API
+        function generateQRCode(url) {
+            qrSkeleton.classList.remove('hidden');
+            // Using a real open API for generating QR codes
+            const apiUrl = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&format=svg&color=ffffff&bgcolor=0a0a0a&data=${encodeURIComponent(url)}`;
+            
+            generatedQrImg.src = apiUrl;
+            
+            // We use the onload event directly on the image tag to hide the skeleton
+            showResults('qr');
+        }
+
+        // Custom Toast Notification instead of alert()
+        function showToast(message) {
+            toastMessage.innerText = message;
+            toast.classList.remove('translate-y-20', 'opacity-0');
+            toast.classList.add('translate-y-0', 'opacity-100');
+
+            setTimeout(() => {
+                toast.classList.remove('translate-y-0', 'opacity-100');
+                toast.classList.add('translate-y-20', 'opacity-0');
+            }, 3000);
+        }
+
+        // Copy to clipboard fallback
+        function copyToClipboard(elementId) {
+            const textToCopy = document.getElementById(elementId).innerText;
+            
+            // Try modern clipboard API first, fallback to execCommand
+            if (navigator.clipboard && window.isSecureContext) {
+                navigator.clipboard.writeText(textToCopy).then(() => {
+                    showToast('Link copied to clipboard!');
+                }).catch(err => {
+                    fallbackCopyTextToClipboard(textToCopy);
+                });
+            } else {
+                fallbackCopyTextToClipboard(textToCopy);
+            }
+        }
+
+        function fallbackCopyTextToClipboard(text) {
+            const textArea = document.createElement("textarea");
+            textArea.value = text;
+            // Prevent scrolling to bottom of page in MS Edge
+            textArea.style.position = "fixed";
+            textArea.style.top = "0";
+            textArea.style.left = "0";
+            textArea.style.width = "2em";
+            textArea.style.height = "2em";
+            textArea.style.padding = "0";
+            textArea.style.border = "none";
+            textArea.style.outline = "none";
+            textArea.style.boxShadow = "none";
+            textArea.style.background = "transparent";
+            document.body.appendChild(textArea);
+            textArea.focus();
+            textArea.select();
+
+            try {
+                const successful = document.execCommand('copy');
+                if(successful) showToast('Link copied to clipboard!');
+            } catch (err) {
+                console.error('Fallback: Oops, unable to copy', err);
+            }
+            document.body.removeChild(textArea);
+        }
+
+        // Mock Download QR Code
+        function downloadQR() {
+            const imgSrc = generatedQrImg.src;
+            if(!imgSrc) return;
+            
+            // To properly download a cross-origin image locally we fetch it and create a blob link.
+            fetch(imgSrc)
+                .then(response => response.blob())
+                .then(blob => {
+                    const blobUrl = window.URL.createObjectURL(blob);
+                    const link = document.createElement('a');
+                    link.href = blobUrl;
+                    link.download = 'Lickelurl-QR.svg';
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                    window.URL.revokeObjectURL(blobUrl);
+                    showToast('QR Code downloaded!');
+                })
+                .catch(err => {
+                    console.error('Error downloading:', err);
+                    showToast('Download started (Check browser downloads)');
+                    // Fallback simple download link
+                    const link = document.createElement('a');
+                    link.href = imgSrc;
+                    link.download = 'Lickelurl-QR.svg';
+                    link.target = "_blank";
+                    link.click();
+                });
+        }
+
+        // Add blur effect to navbar on scroll
+        window.addEventListener('scroll', () => {
+            const nav = document.getElementById('navbar');
+            if (window.scrollY > 20) {
+                nav.classList.add('py-2');
+                nav.classList.remove('pt-6');
+            } else {
+                nav.classList.add('pt-6');
+                nav.classList.remove('py-2');
+            }
+        });
+    </script>
+</body>
+</html>
