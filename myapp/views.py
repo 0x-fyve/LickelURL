@@ -1,5 +1,5 @@
 from django.shortcuts import render, redirect, get_object_or_404
-from .models import ShortURL
+from .models import ShortURL, ClickEvent
 import random, string
 import requests
 from django.contrib.auth.models import  auth
@@ -8,6 +8,9 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.db.models import Sum
+from user_agents import parse
+from collections import Counter
+
 
 # Create your views here.
 def generate_short_code():
@@ -45,9 +48,34 @@ def index(request):
 
 def redirect_url(request, url):
     urlobject = get_object_or_404(ShortURL, short=url)
-    urlobject.clicks += 1
 
+    urlobject.clicks += 1
     urlobject.save()
+
+    user_agent_string = request.META.get(
+        "HTTP_USER_AGENT",
+        ""
+    )
+
+    user_agent = parse(user_agent_string)
+
+    if user_agent.is_mobile:
+        device = "Mobile"
+
+    elif user_agent.is_tablet:
+        device = "Tablet"
+
+    else:
+        device = "Desktop"
+
+    browser = user_agent.browser.family
+
+    ClickEvent.objects.create(
+        short_url=urlobject,
+        device=device,
+        browser=browser,
+        ip_address=request.META.get("REMOTE_ADDR")
+    )
 
     return redirect(urlobject.original_url)
 
@@ -117,6 +145,7 @@ def logout_view(request):
     logout(request)
     return redirect("login")
 
+@login_required
 def dashboard(request):
     user = request.user
     if request.method == "POST":
@@ -125,18 +154,16 @@ def dashboard(request):
 
         # use custom alias if provided
         if custom_alias:
+            code = custom_alias
 
-            short = custom_alias
-
-        else:
-
-            code = generate_short_code()
-
-            if ShortURL.objects.filter(short=short).exists():
+            if ShortURL.objects.filter(short=code).exists():
 
                 return render(request, "dashboard.html", {
                     "error": "Alias already exists"
                 })
+
+        else:
+            code = generate_short_code()
 
         ShortURL.objects.create(
                 user=request.user,
@@ -159,6 +186,42 @@ def dashboard(request):
 
     recent_links = urls[:5]
 
+    click_events = ClickEvent.objects.filter(
+        short_url__user=request.user
+    )
+
+    device_counts = Counter(
+        click_events.values_list(
+            "device",
+            flat=True
+        )
+    )
+    mobile = device_counts.get("Mobile", 0)
+    desktop = device_counts.get("Desktop", 0)
+    tablet = device_counts.get("Tablet", 0)
+
+    total_devices = mobile + desktop + tablet
+
+    mobile_percent = round(
+        (mobile / total_devices) * 100
+    ) if total_devices else 0
+
+    desktop_percent = round(
+        (desktop / total_devices) * 100
+    ) if total_devices else 0
+
+    tablet_percent = round(
+        (tablet / total_devices) * 100
+    ) if total_devices else 0   
+
+    browser_counts = Counter(
+        click_events.values_list(
+            "browser",
+            flat=True
+        )
+    )
+
+    top_browsers = browser_counts.most_common(5)
     context = {
         "urls": urls,
         "recent_links": recent_links,
@@ -166,7 +229,11 @@ def dashboard(request):
         "total_links": total_links,
         "total_clicks": total_clicks,
         "active_links": active_links,
-        
+        "mobile_percent": mobile_percent,
+        "desktop_percent": desktop_percent,
+        "tablet_percent": tablet_percent,
+
+        "top_browsers": top_browsers,
     }
 
     return render(request, "dashboard.html", context)

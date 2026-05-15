@@ -10,10 +10,37 @@ class CustomUser(AbstractUser):
     USERNAME_FIELD = "email"
     REQUIRED_FIELDS = ["username"]
 
+class ClickEvent(models.Model):
 
-class Profile(models.Model):
-    name = models.CharField(max_length=50)
+    short_url = models.ForeignKey(
+        "ShortURL",
+        on_delete=models.CASCADE,
+        related_name="click_events"
+    )
     
+    device = models.CharField(
+        max_length=50,
+        blank=True,
+        null=True
+    )
+
+    browser = models.CharField(
+        max_length=50,
+        blank=True,
+        null=True
+    )
+
+    ip_address = models.GenericIPAddressField(
+        blank=True,
+        null=True
+    )
+
+    clicked_at = models.DateTimeField(
+        auto_now_add=True
+    )
+
+    def __str__(self):
+        return f"{self.browser} - {self.device}"
 
 class ShortURL(models.Model):
     user = models.ForeignKey(

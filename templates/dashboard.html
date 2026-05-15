@@ -369,7 +369,7 @@
                             </label>
                             <div class="flex rounded-xl overflow-hidden glass-input focus-within:ring-2 focus-within:ring-blue-500/50 focus-within:border-blue-500/50 transition-all border border-white/10">
                                 <span class="px-3 py-3 text-sm text-gray-500 bg-black/40 border-r border-white/10">lickel.url/</span>
-                                <input type="text" name="long_url" placeholder="my-campaign" 
+                                <input type="text" name="custom_alias" placeholder="my-campaign" 
                                     class="w-full px-3 py-3 text-sm bg-transparent border-none focus:ring-0 focus:outline-none text-white placeholder-gray-600">
                             </div>
                         </div>
@@ -441,7 +441,7 @@
                                         <div class="flex items-center gap-3">
                                             <img src="https://api.qrserver.com/v1/create-qr-code/?size=50x50&data=example&color=ffffff&bgcolor=000000" alt="QR" class="w-8 h-8 rounded border border-white/10 hidden sm:block">
                                             <div>
-                                                <a href="#" class="font-medium text-blue-400 hover:text-blue-300 hover:underline block mb-0.5">{{ request.get_host }}/r/{{ url.short }}</a>
+                                                <a href="{{ request.get_host }}/r/{{ url.short }}" class="font-medium text-blue-400 hover:text-blue-300 hover:underline block mb-0.5">{{ request.get_host }}/r/{{ url.short }}</a>
                                                 <span class="text-xs text-gray-500"><i class="ph ph-calendar-blank mr-1"></i>{{url.created_at}}</span>
                                             </div>
                                         </div>
@@ -474,77 +474,7 @@
                                     </td>
                                 </tr>
                                 {%endfor%}
-                                <!-- Row 2 -->
-                                <tr class="hover:bg-white/[0.02] transition-colors group">
-                                    <td class="px-6 py-4">
-                                        <div class="flex items-center gap-3">
-                                            <div class="w-8 h-8 rounded border border-white/10 bg-white/5 flex items-center justify-center text-gray-600 hidden sm:flex">
-                                                <i class="ph ph-qr-code text-xl"></i>
-                                            </div>
-                                            <div>
-                                                <a href="#" class="font-medium text-blue-400 hover:text-blue-300 hover:underline block mb-0.5">lickel.url/q3-report</a>
-                                                <span class="text-xs text-gray-500"><i class="ph ph-calendar-blank mr-1"></i> Yesterday</span>
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td class="px-6 py-4 hidden sm:table-cell">
-                                        <div class="max-w-[200px] truncate text-gray-400 group-hover:text-gray-300 transition-colors">
-                                            https://docs.google.com/presentation/d/123...
-                                        </div>
-                                    </td>
-                                    <td class="px-6 py-4">
-                                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/5 text-gray-300 text-xs font-medium border border-white/10">
-                                            <i class="ph-bold ph-minus"></i> 84
-                                        </span>
-                                    </td>
-                                    <td class="px-6 py-4 text-right">
-                                        <div class="flex items-center justify-end gap-2">
-                                            <button onclick="copyToClipboard('lickel.url/q3-report')" class="p-2 rounded-lg text-gray-400 hover:text-white hover:bg-white/10 transition-colors has-tooltip relative">
-                                                <i class="ph ph-copy text-lg"></i>
-                                            </button>
-                                            <button class="p-2 rounded-lg text-gray-400 hover:text-cyan-400 hover:bg-cyan-500/10 transition-colors has-tooltip relative">
-                                                <i class="ph ph-chart-bar text-lg"></i>
-                                            </button>
-                                            <button class="p-2 rounded-lg text-gray-400 hover:text-red-400 hover:bg-red-500/10 transition-colors has-tooltip relative">
-                                                <i class="ph ph-trash text-lg"></i>
-                                            </button>
-                                        </div>
-                                    </td>
-                                </tr>
-                                 <!-- Row 3 -->
-                                 <tr class="hover:bg-white/[0.02] transition-colors group">
-                                    <td class="px-6 py-4">
-                                        <div class="flex items-center gap-3">
-                                            <img src="https://api.qrserver.com/v1/create-qr-code/?size=50x50&data=example2&color=ffffff&bgcolor=000000" alt="QR" class="w-8 h-8 rounded border border-white/10 hidden sm:block">
-                                            <div>
-                                                <a href="#" class="font-medium text-blue-400 hover:text-blue-300 hover:underline block mb-0.5">lickel.url/yt-promo</a>
-                                                <span class="text-xs text-gray-500"><i class="ph ph-calendar-blank mr-1"></i> Oct 12, 2023</span>
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td class="px-6 py-4 hidden sm:table-cell">
-                                        <div class="max-w-[200px] truncate text-gray-400 group-hover:text-gray-300 transition-colors">
-                                            https://youtube.com/watch?v=dQw4w9WgXcQ
-                                        </div>
-                                    </td>
-                                    <td class="px-6 py-4">
-                                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-blue-500/10 text-blue-400 text-xs font-medium border border-blue-500/20">
-                                            <i class="ph-fill ph-trend-up"></i> 12.4k
-                                        </span>
-                                    </td>
-                                    <td class="px-6 py-4 text-right">
-                                        <div class="flex items-center justify-end gap-2">
-                                            <button onclick="copyToClipboard('lickel.url/yt-promo')" class="p-2 rounded-lg text-gray-400 hover:text-white hover:bg-white/10 transition-colors">
-                                                <i class="ph ph-copy text-lg"></i>
-                                            </button>
-                                            <button class="p-2 rounded-lg text-gray-400 hover:text-cyan-400 hover:bg-cyan-500/10 transition-colors">
-                                                <i class="ph ph-chart-bar text-lg"></i>
-                                            </button>
-                                            <button class="p-2 rounded-lg text-gray-400 hover:text-red-400 hover:bg-red-500/10 transition-colors">
-                                                <i class="ph ph-trash text-lg"></i>
-                                            </button>
-                                        </div>
-                                    </td>
+                                
                                 </tr>
                             </tbody>
                         </table>
@@ -572,7 +502,7 @@
                             <div>
                                 <div class="flex justify-between text-sm mb-1">
                                     <span class="flex items-center gap-2 text-white"><i class="ph ph-device-mobile text-gray-400"></i> Mobile</span>
-                                    <span class="font-medium">65%</span>
+                                    <span class="font-medium">{{ mobile_percent }}%</span>
                                 </div>
                                 <div class="w-full bg-white/10 rounded-full h-1.5">
                                     <div class="bg-blue-500 h-1.5 rounded-full" style="width: 65%"></div>
@@ -581,7 +511,7 @@
                             <div>
                                 <div class="flex justify-between text-sm mb-1">
                                     <span class="flex items-center gap-2 text-white"><i class="ph ph-desktop text-gray-400"></i> Desktop</span>
-                                    <span class="font-medium">28%</span>
+                                    <span class="font-medium">{{ desktop_percent }}%</span>
                                 </div>
                                 <div class="w-full bg-white/10 rounded-full h-1.5">
                                     <div class="bg-purple-500 h-1.5 rounded-full" style="width: 28%"></div>
@@ -590,7 +520,7 @@
                             <div>
                                 <div class="flex justify-between text-sm mb-1">
                                     <span class="flex items-center gap-2 text-white"><i class="ph ph-tablet text-gray-400"></i> Tablet</span>
-                                    <span class="font-medium">7%</span>
+                                    <span class="font-medium">{{ tablet_percent }}%</span>
                                 </div>
                                 <div class="w-full bg-white/10 rounded-full h-1.5">
                                     <div class="bg-cyan-500 h-1.5 rounded-full" style="width: 7%"></div>
