@@ -1,1 +1,787 @@
-Dashboard
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard | Lickelurl</title>
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Icons -->
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: {
+                            blue: '#3b82f6',
+                            purple: '#a855f7',
+                            cyan: '#06b6d4',
+                            dark: '#050505',
+                            panel: 'rgba(255, 255, 255, 0.03)',
+                        }
+                    },
+                    animation: {
+                        'blob': 'blob 10s infinite',
+                        'fade-in': 'fadeIn 0.5s ease-out forwards',
+                        'slide-up': 'slideUp 0.5s ease-out forwards',
+                        'toast': 'toastSlide 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55) forwards',
+                    },
+                    keyframes: {
+                        blob: {
+                            '0%': { transform: 'translate(0px, 0px) scale(1)' },
+                            '33%': { transform: 'translate(30px, -50px) scale(1.1)' },
+                            '66%': { transform: 'translate(-20px, 20px) scale(0.9)' },
+                            '100%': { transform: 'translate(0px, 0px) scale(1)' },
+                        },
+                        fadeIn: {
+                            '0%': { opacity: '0' },
+                            '100%': { opacity: '1' },
+                        },
+                        slideUp: {
+                            '0%': { opacity: '0', transform: 'translateY(20px)' },
+                            '100%': { opacity: '1', transform: 'translateY(0)' },
+                        },
+                        toastSlide: {
+                            '0%': { opacity: '0', transform: 'translateY(100%) scale(0.9)' },
+                            '100%': { opacity: '1', transform: 'translateY(0) scale(1)' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            background-color: #050505;
+            color: #ffffff;
+            overflow: hidden; /* Prevent body scroll, handle inside main */
+        }
+
+        /* Glassmorphism Utilities */
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.02);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .glass-card {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.01) 100%);
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .glass-card:hover {
+            border-color: rgba(255, 255, 255, 0.15);
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .glass-input {
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: white;
+            transition: all 0.3s ease;
+        }
+
+        .glass-input:focus {
+            outline: none;
+            border-color: rgba(59, 130, 246, 0.6);
+            background: rgba(0, 0, 0, 0.6);
+            box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.15);
+        }
+
+        .glass-button {
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.9) 0%, rgba(168, 85, 247, 0.9) 100%);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .glass-button::before {
+            content: '';
+            position: absolute;
+            top: 0; left: -100%;
+            width: 100%; height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: all 0.5s ease;
+        }
+
+        .glass-button:hover::before {
+            left: 100%;
+        }
+
+        .glass-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(59, 130, 246, 0.4);
+        }
+
+        .text-gradient {
+            background: linear-gradient(to right, #3b82f6, #a855f7, #06b6d4);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        /* Custom Scrollbar for dashboard feel */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        /* Tooltip */
+        .tooltip {
+            visibility: hidden;
+            opacity: 0;
+            transition: all 0.2s ease;
+        }
+        .has-tooltip:hover .tooltip {
+            visibility: visible;
+            opacity: 1;
+            transform: translateY(-4px);
+        }
+    </style>
+</head>
+<body class="flex h-screen w-full relative">
+
+    <!-- Background Blobs -->
+    <div class="fixed inset-0 w-full h-full overflow-hidden -z-10 pointer-events-none">
+        <div class="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full bg-blue-600/10 blur-[120px] mix-blend-screen animate-blob"></div>
+        <div class="absolute bottom-[-10%] right-[-10%] w-[30%] h-[30%] rounded-full bg-purple-600/10 blur-[120px] mix-blend-screen animate-blob" style="animation-delay: 2s;"></div>
+    </div>
+
+    <!-- Sidebar Navigation -->
+    <aside id="sidebar" class="w-64 flex-shrink-0 glass-panel border-r border-white/10 flex flex-col transition-transform duration-300 absolute md:relative z-40 h-full -translate-x-full md:translate-x-0">
+        <!-- Logo -->
+        <div class="h-20 flex items-center px-6 border-b border-white/5">
+            <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center shadow-[0_0_15px_rgba(59,130,246,0.4)] mr-3">
+                <i class="ph-bold ph-link text-white text-lg"></i>
+            </div>
+            <span class="text-xl font-bold tracking-tight">Lickel<span class="text-blue-400">url</span></span>
+            
+            <!-- Mobile Close -->
+            <button onclick="toggleSidebar()" class="md:hidden ml-auto text-gray-400 hover:text-white">
+                <i class="ph ph-x text-xl"></i>
+            </button>
+        </div>
+
+        <!-- Nav Links -->
+        <nav class="flex-1 overflow-y-auto py-6 px-4 space-y-1">
+            <a href="#" class="flex items-center gap-3 px-3 py-2.5 rounded-xl bg-white/10 text-white font-medium border border-white/5 shadow-inner">
+                <i class="ph-fill ph-squares-four text-blue-400 text-lg"></i>
+                Dashboard
+            </a>
+            <a href="#" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-gray-400 hover:text-white hover:bg-white/5 transition-colors group">
+                <i class="ph ph-link text-lg group-hover:text-purple-400 transition-colors"></i>
+                My Links
+            </a>
+            <a href="#" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-gray-400 hover:text-white hover:bg-white/5 transition-colors group">
+                <i class="ph ph-chart-line-up text-lg group-hover:text-cyan-400 transition-colors"></i>
+                Analytics
+            </a>
+            <a href="#" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-gray-400 hover:text-white hover:bg-white/5 transition-colors group">
+                <i class="ph ph-qr-code text-lg group-hover:text-blue-400 transition-colors"></i>
+                QR Codes
+            </a>
+            <a href="#" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-gray-400 hover:text-white hover:bg-white/5 transition-colors group mt-8">
+                <i class="ph ph-gear text-lg"></i>
+                Settings
+            </a>
+        </nav>
+
+        <!-- Upgrade CTA -->
+        <div class="p-4">
+            <div class="glass-card rounded-2xl p-4 border border-blue-500/20 relative overflow-hidden group">
+                <div class="absolute inset-0 bg-gradient-to-br from-blue-500/10 to-purple-500/10 opacity-50 group-hover:opacity-100 transition-opacity"></div>
+                <div class="relative z-10">
+                    <div class="flex items-center gap-2 mb-2">
+                        <i class="ph-fill ph-lightning text-yellow-400"></i>
+                        <h4 class="text-sm font-bold text-white">Upgrade to Pro</h4>
+                    </div>
+                    <p class="text-xs text-gray-400 mb-3 leading-relaxed">Get custom domains, API access, and advanced analytics.</p>
+                    <button class="w-full py-2 bg-white text-black text-xs font-bold rounded-lg hover:bg-gray-200 transition-colors">View Plans</button>
+                </div>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Mobile Sidebar Overlay -->
+    <div id="sidebarOverlay" onclick="toggleSidebar()" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-30 hidden md:hidden"></div>
+
+    <!-- Main Content Area -->
+    <main class="flex-1 flex flex-col h-full relative overflow-hidden">
+        
+        <!-- Top Navbar -->
+        <header class="h-20 glass-panel border-b border-white/5 flex items-center justify-between px-6 lg:px-10 z-20 sticky top-0">
+            <div class="flex items-center gap-4">
+                <button onclick="toggleSidebar()" class="md:hidden text-gray-400 hover:text-white transition-colors">
+                    <i class="ph ph-list text-2xl"></i>
+                </button>
+                
+                <!-- Search -->
+                <div class="hidden sm:flex relative w-64 lg:w-96 group">
+                    <i class="ph ph-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 group-focus-within:text-blue-400 transition-colors"></i>
+                    <input type="text" placeholder="Search links, aliases, tags..." class="w-full bg-black/30 border border-white/10 rounded-full py-2 pl-10 pr-4 text-sm text-white focus:outline-none focus:border-blue-500/50 focus:bg-black/50 transition-all placeholder-gray-500">
+                    <div class="absolute right-3 top-1/2 -translate-y-1/2 flex gap-1">
+                        <kbd class="hidden lg:inline-block bg-white/10 border border-white/10 rounded px-1.5 text-[10px] text-gray-400">⌘</kbd>
+                        <kbd class="hidden lg:inline-block bg-white/10 border border-white/10 rounded px-1.5 text-[10px] text-gray-400">K</kbd>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Profile & Actions -->
+            <div class="flex items-center gap-4 lg:gap-6">
+                <button class="text-gray-400 hover:text-white transition-colors relative has-tooltip">
+                    <i class="ph ph-bell text-xl"></i>
+                    <span class="absolute top-0 right-0 w-2 h-2 bg-blue-500 rounded-full animate-pulse"></span>
+                    <span class="tooltip absolute -bottom-8 left-1/2 -translate-x-1/2 bg-gray-800 text-xs px-2 py-1 rounded border border-white/10 whitespace-nowrap z-50">Notifications</span>
+                </button>
+                
+                <div class="h-6 w-px bg-white/10"></div>
+
+                <div class="flex items-center gap-3 cursor-pointer group">
+                    <div class="w-9 h-9 rounded-full bg-gradient-to-tr from-blue-600 to-purple-600 p-[2px]">
+                        <img src="https://api.dicebear.com/7.x/notionists/svg?seed=David&backgroundColor=transparent" alt="Profile" class="w-full h-full rounded-full bg-black">
+                    </div>
+                    <div class="hidden md:block text-sm">
+                        <p class="font-semibold text-white group-hover:text-blue-300 transition-colors">{{request.user.username}}.</p>
+                        <p class="text-xs text-gray-500">Pro Plan</p>
+                    </div>
+                    <i class="ph ph-caret-down text-gray-500 group-hover:text-white transition-colors hidden sm:block"></i>
+                </div>
+            </div>
+        </header>
+
+        <!-- Scrollable Dashboard Content -->
+        <div class="flex-1 overflow-y-auto p-6 lg:p-10 space-y-8 animate-fade-in pb-24">
+            
+            <!-- Welcome Section -->
+            <div class="flex flex-col md:flex-row md:items-end justify-between gap-4">
+                <div>
+                    <h1 class="text-2xl md:text-3xl font-bold text-white mb-1">Welcome back, <span class="text-gradient">{{request.user.username}} 👋</span></h1>
+                    <p class="text-gray-400 text-sm">Here's what's happening with your links today.</p>
+                </div>
+                <button class="glass-button py-2.5 px-5 rounded-xl text-sm font-semibold flex items-center gap-2 w-max shadow-[0_0_20px_rgba(59,130,246,0.3)]">
+                    <i class="ph-bold ph-plus"></i> Create New Link
+                </button>
+            </div>
+
+            <!-- Stats Grid -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 animate-slide-up" style="animation-delay: 0.1s;">
+                <!-- Stat 1 -->
+                <div class="glass-card rounded-2xl p-5 flex items-center gap-4 group">
+                    <div class="w-12 h-12 rounded-xl bg-blue-500/10 flex items-center justify-center border border-blue-500/20 group-hover:scale-110 transition-transform">
+                        <i class="ph-fill ph-link text-blue-400 text-2xl"></i>
+                    </div>
+                    <div>
+                        <p class="text-xs text-gray-400 font-medium uppercase tracking-wider mb-1">Total Links</p>
+                        <h3 class="text-2xl font-bold text-white">{{total_links}}</h3>
+                    </div>
+                </div>
+                <!-- Stat 2 -->
+                <div class="glass-card rounded-2xl p-5 flex items-center gap-4 group">
+                    <div class="w-12 h-12 rounded-xl bg-purple-500/10 flex items-center justify-center border border-purple-500/20 group-hover:scale-110 transition-transform">
+                        <i class="ph-fill ph-cursor-click text-purple-400 text-2xl"></i>
+                    </div>
+                    <div>
+                        <p class="text-xs text-gray-400 font-medium uppercase tracking-wider mb-1">Total Clicks</p>
+                        <div class="flex items-baseline gap-2">
+                            <h3 class="text-2xl font-bold text-white">{{ total_clicks }}</h3>
+                            <span class="text-xs font-medium text-green-400 flex items-center"><i class="ph-bold ph-trend-up mr-0.5"></i> 12%</span>
+                        </div>
+                    </div>
+                </div>
+                <!-- Stat 3 -->
+                <div class="glass-card rounded-2xl p-5 flex items-center gap-4 group">
+                    <div class="w-12 h-12 rounded-xl bg-cyan-500/10 flex items-center justify-center border border-cyan-500/20 group-hover:scale-110 transition-transform">
+                        <i class="ph-fill ph-qr-code text-cyan-400 text-2xl"></i>
+                    </div>
+                    <div>
+                        <p class="text-xs text-gray-400 font-medium uppercase tracking-wider mb-1">QR Codes</p>
+                        <h3 class="text-2xl font-bold text-white">856</h3>
+                    </div>
+                </div>
+                <!-- Stat 4 -->
+                <div class="glass-card rounded-2xl p-5 flex items-center gap-4 group">
+                    <div class="w-12 h-12 rounded-xl bg-green-500/10 flex items-center justify-center border border-green-500/20 group-hover:scale-110 transition-transform">
+                        <i class="ph-fill ph-activity text-green-400 text-2xl"></i>
+                    </div>
+                    <div>
+                        <p class="text-xs text-gray-400 font-medium uppercase tracking-wider mb-1">Active Links</p>
+                        <h3 class="text-2xl font-bold text-white">{{ active_links }}</h3>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Main Layout: Create Link & Chart -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8 animate-slide-up" style="animation-delay: 0.2s;">
+                
+                <!-- Quick Create Card (Left Col) -->
+                <div class="lg:col-span-1 glass-card rounded-3xl p-6 relative overflow-hidden border-t border-l border-white/20 shadow-[0_10px_40px_rgba(0,0,0,0.5)]">
+                    <!-- Subtle Glow behind form -->
+                    <div class="absolute top-0 right-0 w-32 h-32 bg-blue-500/20 rounded-full blur-[50px] -z-10 pointer-events-none"></div>
+                    
+                    <div class="flex items-center gap-2 mb-6">
+                        <i class="ph-fill ph-magic-wand text-blue-400 text-xl"></i>
+                        <h3 class="text-lg font-bold text-white">Create Short Link</h3>
+                    </div>
+
+                    <form method="POST" class="space-y-5">
+                        {% csrf_token %}
+                        <div class="space-y-1.5">
+                            <label class="text-xs font-medium text-gray-400">Destination URL</label>
+                            <input type="url" name="long_url" required placeholder="https://very-long-url.com/example..." 
+                                class="glass-input w-full rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50">
+                        </div>
+                        
+                        <div class="space-y-1.5">
+                            <label class="text-xs font-medium text-gray-400 flex justify-between">
+                                Custom Alias <span class="text-gray-600">Optional</span>
+                            </label>
+                            <div class="flex rounded-xl overflow-hidden glass-input focus-within:ring-2 focus-within:ring-blue-500/50 focus-within:border-blue-500/50 transition-all border border-white/10">
+                                <span class="px-3 py-3 text-sm text-gray-500 bg-black/40 border-r border-white/10">lickel.url/</span>
+                                <input type="text" name="long_url" placeholder="my-campaign" 
+                                    class="w-full px-3 py-3 text-sm bg-transparent border-none focus:ring-0 focus:outline-none text-white placeholder-gray-600">
+                            </div>
+                        </div>
+
+                        <!-- Toggles -->
+                        <div class="p-3 rounded-xl bg-black/30 border border-white/5 flex items-center justify-between">
+                            <div class="flex items-center gap-2">
+                                <i class="ph ph-qr-code text-gray-400"></i>
+                                <span class="text-sm text-gray-300">Generate QR Code</span>
+                            </div>
+                            <!-- Modern Toggle Switch -->
+                            <label class="relative inline-flex items-center cursor-pointer">
+                                <input type="checkbox" checked class="sr-only peer">
+                                <div class="w-9 h-5 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-blue-500"></div>
+                            </label>
+                        </div>
+
+                        <button type="submit" class="glass-button w-full py-3.5 rounded-xl text-white font-semibold text-sm flex items-center justify-center gap-2">
+                            Generate Link <i class="ph-bold ph-arrow-right"></i>
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Analytics Chart (Right Cols) -->
+                <div class="lg:col-span-2 glass-card rounded-3xl p-6 flex flex-col">
+                    <div class="flex items-center justify-between mb-6">
+                        <div>
+                            <h3 class="text-lg font-bold text-white mb-1">Clicks Over Time</h3>
+                            <p class="text-xs text-gray-400">Performance across all links (Last 7 days)</p>
+                        </div>
+                        <select class="bg-black/40 border border-white/10 rounded-lg text-xs text-white px-3 py-1.5 focus:outline-none focus:border-blue-500 cursor-pointer appearance-none">
+                            <option>Last 7 Days</option>
+                            <option>Last 30 Days</option>
+                            <option>All Time</option>
+                        </select>
+                    </div>
+                    
+                    <div class="flex-1 relative w-full min-h-[250px]">
+                        <canvas id="clicksChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Links & Analytics row -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8 animate-slide-up" style="animation-delay: 0.3s;">
+                
+                <!-- Recent Links Table -->
+                <div class="lg:col-span-2 glass-card rounded-3xl overflow-hidden flex flex-col">
+                    <div class="p-6 border-b border-white/5 flex items-center justify-between">
+                        <h3 class="text-lg font-bold text-white">Recent Links</h3>
+                        <a href="#" class="text-sm text-blue-400 hover:text-blue-300 font-medium">View All</a>
+                    </div>
+                    
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr class="bg-white/5">
+                                    <th class="px-6 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wider">Short Link</th>
+                                    <th class="px-6 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wider hidden sm:table-cell">Original</th>
+                                    <th class="px-6 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wider">Clicks</th>
+                                    <th class="px-6 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wider text-right">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-white/5 text-sm">
+                                <!-- Row 1 -->
+                                {% for url in recent_links %}
+                                <tr class="hover:bg-white/[0.02] transition-colors group">
+                                    <td class="px-6 py-4">
+                                        <div class="flex items-center gap-3">
+                                            <img src="https://api.qrserver.com/v1/create-qr-code/?size=50x50&data=example&color=ffffff&bgcolor=000000" alt="QR" class="w-8 h-8 rounded border border-white/10 hidden sm:block">
+                                            <div>
+                                                <a href="#" class="font-medium text-blue-400 hover:text-blue-300 hover:underline block mb-0.5">{{ request.get_host }}/r/{{ url.short }}</a>
+                                                <span class="text-xs text-gray-500"><i class="ph ph-calendar-blank mr-1"></i>{{url.created_at}}</span>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="px-6 py-4 hidden sm:table-cell">
+                                        <div class="max-w-[200px] truncate text-gray-400 group-hover:text-gray-300 transition-colors" title="https://ecommerce-store.com/products/summer-sale-2024?utm_source=twitter&utm_medium=social">
+                                            {{url.original_url}}
+                                        </div>
+                                    </td>
+                                    <td class="px-6 py-4">
+                                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-blue-500/10 text-blue-400 text-xs font-medium border border-blue-500/20">
+                                            <i class="ph-fill ph-trend-up"></i> {{url.clicks}}
+                                        </span>
+                                    </td>
+                                    <td class="px-6 py-4 text-right">
+                                        <div class="flex items-center justify-end gap-2">
+                                            <button onclick="copyToClipboard('lickel.url/summer-sale')" class="p-2 rounded-lg text-gray-400 hover:text-white hover:bg-white/10 transition-colors has-tooltip relative">
+                                                <i class="ph ph-copy text-lg"></i>
+                                                <span class="tooltip absolute -top-8 left-1/2 -translate-x-1/2 bg-gray-800 text-xs px-2 py-1 rounded border border-white/10 whitespace-nowrap z-50">Copy Link</span>
+                                            </button>
+                                            <button class="p-2 rounded-lg text-gray-400 hover:text-cyan-400 hover:bg-cyan-500/10 transition-colors has-tooltip relative">
+                                                <i class="ph ph-chart-bar text-lg"></i>
+                                                <span class="tooltip absolute -top-8 left-1/2 -translate-x-1/2 bg-gray-800 text-xs px-2 py-1 rounded border border-white/10 whitespace-nowrap z-50">Analytics</span>
+                                            </button>
+                                            <button class="p-2 rounded-lg text-gray-400 hover:text-red-400 hover:bg-red-500/10 transition-colors has-tooltip relative">
+                                                <i class="ph ph-trash text-lg"></i>
+                                                <span class="tooltip absolute -top-8 right-0 bg-gray-800 text-xs px-2 py-1 rounded border border-white/10 whitespace-nowrap z-50">Delete</span>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {%endfor%}
+                                <!-- Row 2 -->
+                                <tr class="hover:bg-white/[0.02] transition-colors group">
+                                    <td class="px-6 py-4">
+                                        <div class="flex items-center gap-3">
+                                            <div class="w-8 h-8 rounded border border-white/10 bg-white/5 flex items-center justify-center text-gray-600 hidden sm:flex">
+                                                <i class="ph ph-qr-code text-xl"></i>
+                                            </div>
+                                            <div>
+                                                <a href="#" class="font-medium text-blue-400 hover:text-blue-300 hover:underline block mb-0.5">lickel.url/q3-report</a>
+                                                <span class="text-xs text-gray-500"><i class="ph ph-calendar-blank mr-1"></i> Yesterday</span>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="px-6 py-4 hidden sm:table-cell">
+                                        <div class="max-w-[200px] truncate text-gray-400 group-hover:text-gray-300 transition-colors">
+                                            https://docs.google.com/presentation/d/123...
+                                        </div>
+                                    </td>
+                                    <td class="px-6 py-4">
+                                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/5 text-gray-300 text-xs font-medium border border-white/10">
+                                            <i class="ph-bold ph-minus"></i> 84
+                                        </span>
+                                    </td>
+                                    <td class="px-6 py-4 text-right">
+                                        <div class="flex items-center justify-end gap-2">
+                                            <button onclick="copyToClipboard('lickel.url/q3-report')" class="p-2 rounded-lg text-gray-400 hover:text-white hover:bg-white/10 transition-colors has-tooltip relative">
+                                                <i class="ph ph-copy text-lg"></i>
+                                            </button>
+                                            <button class="p-2 rounded-lg text-gray-400 hover:text-cyan-400 hover:bg-cyan-500/10 transition-colors has-tooltip relative">
+                                                <i class="ph ph-chart-bar text-lg"></i>
+                                            </button>
+                                            <button class="p-2 rounded-lg text-gray-400 hover:text-red-400 hover:bg-red-500/10 transition-colors has-tooltip relative">
+                                                <i class="ph ph-trash text-lg"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                 <!-- Row 3 -->
+                                 <tr class="hover:bg-white/[0.02] transition-colors group">
+                                    <td class="px-6 py-4">
+                                        <div class="flex items-center gap-3">
+                                            <img src="https://api.qrserver.com/v1/create-qr-code/?size=50x50&data=example2&color=ffffff&bgcolor=000000" alt="QR" class="w-8 h-8 rounded border border-white/10 hidden sm:block">
+                                            <div>
+                                                <a href="#" class="font-medium text-blue-400 hover:text-blue-300 hover:underline block mb-0.5">lickel.url/yt-promo</a>
+                                                <span class="text-xs text-gray-500"><i class="ph ph-calendar-blank mr-1"></i> Oct 12, 2023</span>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="px-6 py-4 hidden sm:table-cell">
+                                        <div class="max-w-[200px] truncate text-gray-400 group-hover:text-gray-300 transition-colors">
+                                            https://youtube.com/watch?v=dQw4w9WgXcQ
+                                        </div>
+                                    </td>
+                                    <td class="px-6 py-4">
+                                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-blue-500/10 text-blue-400 text-xs font-medium border border-blue-500/20">
+                                            <i class="ph-fill ph-trend-up"></i> 12.4k
+                                        </span>
+                                    </td>
+                                    <td class="px-6 py-4 text-right">
+                                        <div class="flex items-center justify-end gap-2">
+                                            <button onclick="copyToClipboard('lickel.url/yt-promo')" class="p-2 rounded-lg text-gray-400 hover:text-white hover:bg-white/10 transition-colors">
+                                                <i class="ph ph-copy text-lg"></i>
+                                            </button>
+                                            <button class="p-2 rounded-lg text-gray-400 hover:text-cyan-400 hover:bg-cyan-500/10 transition-colors">
+                                                <i class="ph ph-chart-bar text-lg"></i>
+                                            </button>
+                                            <button class="p-2 rounded-lg text-gray-400 hover:text-red-400 hover:bg-red-500/10 transition-colors">
+                                                <i class="ph ph-trash text-lg"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <!-- EMPTY STATE (Uncomment to view empty state design) -->
+                    <!-- 
+                    <div class="flex-1 flex flex-col items-center justify-center py-16 px-4 text-center">
+                        <div class="w-16 h-16 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center mb-4">
+                            <i class="ph-fill ph-link-break text-3xl text-gray-500"></i>
+                        </div>
+                        <h4 class="text-white font-semibold mb-2">No links created yet</h4>
+                        <p class="text-sm text-gray-400 max-w-xs mb-6">Shorten your first URL to start tracking analytics and generating QR codes.</p>
+                        <button class="bg-white text-black px-4 py-2 rounded-lg text-sm font-semibold hover:bg-gray-200 transition-colors">Create your first link</button>
+                    </div> 
+                    -->
+                </div>
+
+                <!-- Top Performing (Right Col) -->
+                <div class="lg:col-span-1 flex flex-col gap-6">
+                    <!-- Top Devices -->
+                    <div class="glass-card rounded-3xl p-6 flex-1">
+                        <h3 class="text-sm font-bold text-white mb-4 uppercase tracking-wider text-gray-400">Top Devices</h3>
+                        <div class="space-y-4">
+                            <div>
+                                <div class="flex justify-between text-sm mb-1">
+                                    <span class="flex items-center gap-2 text-white"><i class="ph ph-device-mobile text-gray-400"></i> Mobile</span>
+                                    <span class="font-medium">65%</span>
+                                </div>
+                                <div class="w-full bg-white/10 rounded-full h-1.5">
+                                    <div class="bg-blue-500 h-1.5 rounded-full" style="width: 65%"></div>
+                                </div>
+                            </div>
+                            <div>
+                                <div class="flex justify-between text-sm mb-1">
+                                    <span class="flex items-center gap-2 text-white"><i class="ph ph-desktop text-gray-400"></i> Desktop</span>
+                                    <span class="font-medium">28%</span>
+                                </div>
+                                <div class="w-full bg-white/10 rounded-full h-1.5">
+                                    <div class="bg-purple-500 h-1.5 rounded-full" style="width: 28%"></div>
+                                </div>
+                            </div>
+                            <div>
+                                <div class="flex justify-between text-sm mb-1">
+                                    <span class="flex items-center gap-2 text-white"><i class="ph ph-tablet text-gray-400"></i> Tablet</span>
+                                    <span class="font-medium">7%</span>
+                                </div>
+                                <div class="w-full bg-white/10 rounded-full h-1.5">
+                                    <div class="bg-cyan-500 h-1.5 rounded-full" style="width: 7%"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Top Referrers -->
+                    <div class="glass-card rounded-3xl p-6 flex-1">
+                        <h3 class="text-sm font-bold text-white mb-4 uppercase tracking-wider text-gray-400">Top Referrers</h3>
+                        <ul class="space-y-3">
+                            <li class="flex items-center justify-between">
+                                <div class="flex items-center gap-2">
+                                    <div class="w-6 h-6 rounded bg-black flex items-center justify-center border border-white/10">
+                                        <i class="ph-fill ph-twitter-logo text-blue-400 text-xs"></i>
+                                    </div>
+                                    <span class="text-sm text-gray-300">Twitter</span>
+                                </div>
+                                <span class="text-sm font-medium">12.5k</span>
+                            </li>
+                            <li class="flex items-center justify-between">
+                                <div class="flex items-center gap-2">
+                                    <div class="w-6 h-6 rounded bg-black flex items-center justify-center border border-white/10">
+                                        <i class="ph-fill ph-facebook-logo text-blue-600 text-xs"></i>
+                                    </div>
+                                    <span class="text-sm text-gray-300">Facebook</span>
+                                </div>
+                                <span class="text-sm font-medium">8.2k</span>
+                            </li>
+                            <li class="flex items-center justify-between">
+                                <div class="flex items-center gap-2">
+                                    <div class="w-6 h-6 rounded bg-black flex items-center justify-center border border-white/10">
+                                        <i class="ph ph-globe text-gray-400 text-xs"></i>
+                                    </div>
+                                    <span class="text-sm text-gray-300">Direct / Unknown</span>
+                                </div>
+                                <span class="text-sm font-medium">4.1k</span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Footer spacing -->
+            <div class="h-10"></div>
+        </div>
+    </main>
+
+    <!-- Toast Notification Container -->
+    <div id="toast-container" class="fixed bottom-6 right-6 z-50 flex flex-col gap-3"></div>
+
+    <script>
+        // --- Sidebar Mobile Toggle ---
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('sidebarOverlay');
+            
+            if (sidebar.classList.contains('-translate-x-full')) {
+                // Open
+                sidebar.classList.remove('-translate-x-full');
+                overlay.classList.remove('hidden');
+            } else {
+                // Close
+                sidebar.classList.add('-translate-x-full');
+                overlay.classList.add('hidden');
+            }
+        }
+
+        // --- Copy to Clipboard & Toast Logic ---
+        function copyToClipboard(text) {
+            navigator.clipboard.writeText(text).then(() => {
+                showToast(`Copied ${text} to clipboard!`);
+            }).catch(err => {
+                console.error('Could not copy text: ', err);
+            });
+        }
+
+        function showToast(message) {
+            const container = document.getElementById('toast-container');
+            
+            const toast = document.createElement('div');
+            toast.className = 'glass-card border border-green-500/30 bg-green-500/10 text-white px-4 py-3 rounded-xl flex items-center gap-3 shadow-lg animate-toast max-w-sm';
+            
+            toast.innerHTML = `
+                <i class="ph-fill ph-check-circle text-green-400 text-xl"></i>
+                <p class="text-sm font-medium">${message}</p>
+            `;
+            
+            container.appendChild(toast);
+            
+            // Remove after 3 seconds
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateY(20px)';
+                toast.style.transition = 'all 0.3s ease';
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        // --- Chart.js Initialization ---
+        document.addEventListener("DOMContentLoaded", function() {
+            const ctx = document.getElementById('clicksChart').getContext('2d');
+            
+            // Create gradient for the line area
+            let gradient = ctx.createLinearGradient(0, 0, 0, 400);
+            gradient.addColorStop(0, 'rgba(59, 130, 246, 0.5)'); // Tailwind blue-500
+            gradient.addColorStop(1, 'rgba(59, 130, 246, 0.0)');
+
+            // Mock Data
+            const labels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+            const data = [1200, 1900, 1500, 2200, 1800, 2800, 2400];
+
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Clicks',
+                        data: data,
+                        borderColor: '#3b82f6', // blue-500
+                        backgroundColor: gradient,
+                        borderWidth: 2,
+                        pointBackgroundColor: '#050505',
+                        pointBorderColor: '#3b82f6',
+                        pointBorderWidth: 2,
+                        pointRadius: 4,
+                        pointHoverRadius: 6,
+                        fill: true,
+                        tension: 0.4 // Smooth curves
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                            titleColor: '#fff',
+                            bodyColor: '#cbd5e1',
+                            borderColor: 'rgba(255,255,255,0.1)',
+                            borderWidth: 1,
+                            padding: 10,
+                            displayColors: false,
+                            callbacks: {
+                                label: function(context) {
+                                    return context.parsed.y + ' clicks';
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            grid: {
+                                display: false,
+                                drawBorder: false
+                            },
+                            ticks: {
+                                color: '#64748b', // slate-500
+                                font: {
+                                    family: "'Plus Jakarta Sans', sans-serif"
+                                }
+                            }
+                        },
+                        y: {
+                            grid: {
+                                color: 'rgba(255, 255, 255, 0.05)',
+                                drawBorder: false
+                            },
+                            ticks: {
+                                color: '#64748b',
+                                font: {
+                                    family: "'Plus Jakarta Sans', sans-serif"
+                                },
+                                callback: function(value) {
+                                    return value >= 1000 ? (value/1000) + 'k' : value;
+                                }
+                            },
+                            beginAtZero: true
+                        }
+                    },
+                    interaction: {
+                        intersect: false,
+                        mode: 'index',
+                    },
+                }
+            });
+        });
+    </script>
+</body>
+</html>

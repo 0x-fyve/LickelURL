@@ -7,14 +7,15 @@ from django.contrib import messages
 from django.contrib.auth import get_user_model
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
-
+from django.db.models import Sum
 
 # Create your views here.
-def create_shorturl():
+def generate_short_code():
     code = ''.join(random.choices(string.ascii_letters + string.digits, k=6))
 
     while ShortURL.objects.filter(short=code).exists():
         code = ''.join(random.choices(string.ascii_letters + string.digits, k=6))
+    return code    
 
 def index(request):
     code = []
@@ -23,11 +24,7 @@ def index(request):
         action = request.POST.get('action') 
         original_url = request.POST.get('long_url')
         if action == 'shorten':
-            code = ''.join(random.choices(string.ascii_letters + string.digits, k=6))
-
-            while ShortURL.objects.filter(short=code).exists():
-                code = ''.join(random.choices(string.ascii_letters + string.digits, k=6))
-
+            code =  generate_short_code()
 
             if request.user.is_authenticated:
                 user = request.user
@@ -39,7 +36,7 @@ def index(request):
                 original_url=original_url,
                 short=code
             )
-            
+             
         elif action == 'qr':
             qr_code = f"http://api.qrserver.com/v1/create-qr-code/?data={original_url}&size=200x200"
 
@@ -121,4 +118,55 @@ def logout_view(request):
     return redirect("login")
 
 def dashboard(request):
-    return render(request, "dashboard.html")
+    user = request.user
+    if request.method == "POST":
+        original_url = request.POST.get('long_url')
+        custom_alias = request.POST.get("custom_alias")
+
+        # use custom alias if provided
+        if custom_alias:
+
+            short = custom_alias
+
+        else:
+
+            code = generate_short_code()
+
+            if ShortURL.objects.filter(short=short).exists():
+
+                return render(request, "dashboard.html", {
+                    "error": "Alias already exists"
+                })
+
+        ShortURL.objects.create(
+                user=request.user,
+                original_url=original_url,
+                short=code
+            )
+        return redirect("dashboard")
+    
+    urls = ShortURL.objects.filter(user=request.user).order_by("-created_at")
+
+    total_links = urls.count()
+    
+    total_clicks = urls.aggregate(
+        total=Sum("clicks")
+    )["total"] or 0
+
+    active_links = urls.filter(
+        clicks__gt=0
+    ).count()
+
+    recent_links = urls[:5]
+
+    context = {
+        "urls": urls,
+        "recent_links": recent_links,
+
+        "total_links": total_links,
+        "total_clicks": total_clicks,
+        "active_links": active_links,
+        
+    }
+
+    return render(request, "dashboard.html", context)
